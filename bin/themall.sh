@@ -1,6 +1,11 @@
 #!/usr/bin/env bash
 
-
+run=BICRO59
+barcode=TGATGCGC
+code=BB67
+exp=test
+bash bliss_1.sh "$exp" mm10 ../patterns/test 5 /media/bicroserver_2-seq/BICRO59/BICRO59/FASTQ
+#######################################################################
 # run=BICRO59
 # barcode=TGATGCGC
 # code=BB67

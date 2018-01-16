@@ -45,31 +45,14 @@ numb_of_files=1
 # "$bin"/module/prepare_files.sh  $r1 $in $numb_of_files $r2
 ################################################################################
 # "$bin"/module/pattern_filtering.sh $in $outcontrol $out $patfile $cutsite
-"$bin"/module/prepare_for_mapping.sh $numb_of_files $out $aux $outcontrol $auxcontrol $in $cutsite
+# "$bin"/module/prepare_for_mapping.sh $numb_of_files $out $aux $outcontrol $auxcontrol $in $cutsite
 # "$bin"/module/mapping.sh $numb_of_files $numbproc $refgen $aux $out $experiment 
 # "$bin"/module/mapping_quality.sh $numb_of_files $out $experiment $outcontrol $quality $cutsite
-# "$bin"/module/umi_joining.sh $numb_of_files $out $experiment $aux $outcontrol $auxcontrol $quality $cutsite
-# cat "$datadir"/"$experiment"/outdata/_q"$quality".bed | cut -f-5 |LC_ALL=C uniq -c | awk '{print $2,$3,$4,$5,$6,$1}' | tr " " "," > "$datadir"/"$experiment"/auxdata/aux
-# #####UMI filtering
-# cp "$datadir"/"$experiment"/auxdata/aux "$datadir"/"$experiment"/outdata/pre_umi_filtering.csv
+#####UMI filtering
+umi_tools dedup -I "$out"/*.q*.sorted.bam --output-stats="$out"/deduplicated -S "$out"/deduplicated.bam -L "$out"/group.log --edit-distance-threshold 2 --method "adjacency"
 
-# "$bin"/module/umi_filter_1.sh "$datadir"/"$experiment"/outdata/pre_umi_filtering.csv "$datadir"/"$experiment"/outdata/q"$quality"_aux
+#!!!!YOU NEED TO CONVERT THE BAM FILE INTO A BED FILE, DO IT REMEMBERING THAT READS ON - STRANDS NEEDS TO BE PROPERLY TRANSLATED!!!!
 
-# "$bin"/module/umi_filter_2.sh "$datadir"/"$experiment"/outdata/q"$quality"_aux "$datadir"/"$experiment"/outdata/q"$quality"_chr-loc-strand-umi-pcr
-
-# if [ $genome == "hg19" ]; then
-#     sed -i.bak 's/chr23/chrX/' "$datadir"/"$experiment"/outdata/q"$quality"_chr-loc-strand-umi-pcr
-#     sed -i.bak 's/chr24/chrY/' "$datadir"/"$experiment"/outdata/q"$quality"_chr-loc-strand-umi-pcr
-# fi
-
-# "$bin"/module/umi_filter_3.sh "$datadir"/"$experiment"/outdata/q"$quality"_chr-loc-strand-umi-pcr  "$datadir"/"$experiment"/outdata/q"$quality"_chr-loc-countDifferentUMI.bed
-# sed -i.bak 's/chr23/chrX/' "$datadir"/"$experiment"/outdata/q"$quality"_chr-loc-countDifferentUMI.bed
-# sed -i.bak 's/chr24/chrY/' "$datadir"/"$experiment"/outdata/q"$quality"_chr-loc-countDifferentUMI.bed
-
-# # echo "Number of fragments:" > "$datadir"/"$experiment"/outdata/summary.txt
-# # wc -l "$datadir"/"$experiment"/indata/r1oneline.fa >> "$datadir"/"$experiment"/outdata/summary.txt
-# # echo "Number of fragment with prefix:" >> "$datadir"/"$experiment"/outdata/summary.txt
-# # cat "$datadir"/"$experiment"/outdata/*filtered* | paste - - | wc -l >> "$datadir"/"$experiment"/outdata/summary.txt
 # echo "Alignment statistics:" >> "$datadir"/"$experiment"/outdata/summary.txt
 # samtools flagstat "$datadir"/"$experiment"/outdata/*.sam >> "$datadir"/"$experiment"/outdata/summary.txt
 # echo "Number of left and right cuts:" >> "$datadir"/"$experiment"/outdata/summary.txt
