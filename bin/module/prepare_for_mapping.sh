@@ -9,8 +9,10 @@ cutsite=$7
 
 echo 'Parse the fastq files, filtering and trimming ...'
 if [[ -z "$cutsite" && $numb_of_files == 1 ]]; then # IF THERE IS NO ENZYME && WITH SE READS
-    cat $in/r1oneline.fq | tr " " "\n" | tr "\t" "\n" | grep -v "1:[YN]:0:" | paste - - - - | 
-    awk '{print $1,substr($2,9,length($2)),$3,substr($4,9,length($4))}' | tr " " "\n" > $aux/r1.2b.aln.fq
+    cat $out/filtered.r1.fa | cut -d':' -f-7 | tr '>' '@' | paste - -|awk '{print $1,$NF}'|
+    LC_ALL=C sort --parallel=8 --temporary-directory=$HOME/tmp -k1,1 > $aux/ID_genomic
+    LC_ALL=C join $aux/ID_genomic $in/r1oneline.fq | tr " " "\n" | grep -v "1:[YN]:0:" | paste - - - - -| 
+    awk '{print $1,$2,$4,substr($5,length($5)-length($2)+1,length($5))}' | tr " " "\n" > $aux/r1.2b.aln.fq
 fi
 echo 'Done! Ready to be aligned to the reference genome!'
 
