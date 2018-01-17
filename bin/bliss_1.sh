@@ -49,8 +49,8 @@ numb_of_files=1
 # "$bin"/module/mapping.sh $numb_of_files $numbproc $refgen $aux $out $experiment 
 # "$bin"/module/mapping_quality.sh $numb_of_files $out $experiment $outcontrol $quality $cutsite
 #####UMI filtering
-umi_tools dedup -I "$out"/*.q*.sorted.bam --output-stats="$out"/deduplicated -S "$out"/deduplicated.bam -L "$out"/group.log --edit-distance-threshold 2 --method "adjacency"
-
+# umi_tools dedup -I "$out"/*.q*.sorted.bam --output-stats="$out"/deduplicated -S "$out"/deduplicated.bam -L "$out"/group.log --edit-distance-threshold 2 --method "adjacency"
+"$bin"/module/umi_joining.sh $numb_of_files $out $experiment $aux $outcontrol $auxcontrol $quality $cutsite
 #!!!!YOU NEED TO CONVERT THE BAM FILE INTO A BED FILE, DO IT REMEMBERING THAT READS ON - STRANDS NEEDS TO BE PROPERLY TRANSLATED!!!!
 
 # echo "Alignment statistics:" >> "$datadir"/"$experiment"/outdata/summary.txt
