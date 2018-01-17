@@ -49,7 +49,7 @@ r1="$in"/processed.fastq.gz
 "$bin"/module/mapping.sh $numb_of_files $numbproc $refgen $aux $out $experiment 
 "$bin"/module/mapping_quality.sh $numb_of_files $out $experiment $outcontrol $quality $cutsite
 #####UMI filtering
-umi_tools dedup -I "$out"/*.q*.sorted.bam --output-stats="$out"/deduplicated -S "$out"/deduplicated.bam -L "$out"/group.log --edit-distance-threshold 2 --method "adjacency"
+umi_tools dedup -I "$out"/*.q*.sorted.bam -S "$out"/deduplicated.bam --edit-distance-threshold 2
 "$bin"/module/umi_joining.sh $numb_of_files $out $experiment $aux $outcontrol $auxcontrol $quality $cutsite
 
 # echo "Alignment statistics:" >> "$datadir"/"$experiment"/outdata/summary.txt
