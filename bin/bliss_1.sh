@@ -39,19 +39,18 @@ refgen=$HOME/igv/genomes/$genome.fasta
 ################################################################################
 # "$bin"/module/quality_control.sh $numb_of_files $numbproc $out $r1 $r2 
 numb_of_files=1
-# r1=/home/garner1/Work/dataset/bliss/test/test.fastq.gz
-# umi_tools extract --stdin="$r1" --bc-pattern=NNNNNNNNXXXXXXXX --log=processed.log --stdout "$in"/processed.fastq.gz # Ns represent the random part of the barcode and Xs the fixed part
-# r1="$in"/processed.fastq.gz
-# "$bin"/module/prepare_files.sh  $r1 $in $numb_of_files $r2
+r1=/home/garner1/Work/dataset/bliss/test.fastq.gz
+umi_tools extract --stdin="$r1" --bc-pattern=NNNNNNNNXXXXXXXX --log=processed.log --stdout "$in"/processed.fastq.gz # Ns represent the random part of the barcode and Xs the fixed part
+r1="$in"/processed.fastq.gz
+"$bin"/module/prepare_files.sh  $r1 $in $numb_of_files $r2
 ################################################################################
-# "$bin"/module/pattern_filtering.sh $in $outcontrol $out $patfile $cutsite
-# "$bin"/module/prepare_for_mapping.sh $numb_of_files $out $aux $outcontrol $auxcontrol $in $cutsite
-# "$bin"/module/mapping.sh $numb_of_files $numbproc $refgen $aux $out $experiment 
-# "$bin"/module/mapping_quality.sh $numb_of_files $out $experiment $outcontrol $quality $cutsite
+"$bin"/module/pattern_filtering.sh $in $outcontrol $out $patfile $cutsite
+"$bin"/module/prepare_for_mapping.sh $numb_of_files $out $aux $outcontrol $auxcontrol $in $cutsite
+"$bin"/module/mapping.sh $numb_of_files $numbproc $refgen $aux $out $experiment 
+"$bin"/module/mapping_quality.sh $numb_of_files $out $experiment $outcontrol $quality $cutsite
 #####UMI filtering
-# umi_tools dedup -I "$out"/*.q*.sorted.bam --output-stats="$out"/deduplicated -S "$out"/deduplicated.bam -L "$out"/group.log --edit-distance-threshold 2 --method "adjacency"
+umi_tools dedup -I "$out"/*.q*.sorted.bam --output-stats="$out"/deduplicated -S "$out"/deduplicated.bam -L "$out"/group.log --edit-distance-threshold 2 --method "adjacency"
 "$bin"/module/umi_joining.sh $numb_of_files $out $experiment $aux $outcontrol $auxcontrol $quality $cutsite
-#!!!!YOU NEED TO CONVERT THE BAM FILE INTO A BED FILE, DO IT REMEMBERING THAT READS ON - STRANDS NEEDS TO BE PROPERLY TRANSLATED!!!!
 
 # echo "Alignment statistics:" >> "$datadir"/"$experiment"/outdata/summary.txt
 # samtools flagstat "$datadir"/"$experiment"/outdata/*.sam >> "$datadir"/"$experiment"/outdata/summary.txt

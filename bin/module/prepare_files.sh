@@ -13,10 +13,7 @@ if [ $numb_of_files == 2 ]; then
     gunzip -c $r2 | paste - - - - > $in/r2oneline.fq & pid3=$!
 fi
 wait $pid1
-cat  $in/r1.fa | paste - - > $in/r1oneline.fa & pid4=$!
-wait $pid2
 if [ $numb_of_files == 2 ]; then
     wait $pid3
 fi
-wait $pid4
 echo 'Done'
