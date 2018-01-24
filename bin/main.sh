@@ -42,9 +42,10 @@ rm filelist_"$experiment"
 # "$bin"/module/prepare_for_mapping.sh $numb_of_files $out $aux $in
 
 # USE UMI_TOOLS TO EXTRACT UMI FROM BARCODE
-r1=$aux/r1.2b.aln.fq
-umi_tools extract --stdin="$r1" --bc-pattern=NNNNNNNNXXXXXXXX --log=processed.log --stdout "$in"/processed.fastq.gz # Ns represent the random part of the barcode and Xs the fixed part (the barcode)
-zcat "$in"/processed.fastq.gz | paste - - - -|awk '{print $1,substr($2,9,1000),$3,substr($4,9,1000)}'|tr ' ' '\n' > $in/processed.fq # remove the barcode
+# r1=$aux/r1.2b.aln.fq
+# umi_tools extract --stdin="$r1" --bc-pattern=NNNNNNNNXXXXXXXX --log=processed.log --stdout "$in"/processed.fastq.gz # Ns represent the random part of the barcode and Xs the fixed part (the barcode)
+# zcat "$in"/processed.fastq.gz | paste - - - -|awk '{print $1,substr($2,9,1000),$3,substr($4,9,1000)}'|tr ' ' '\n' > $in/processed.fq # remove the barcode
+cat $in/processed.fq | paste - - - - | cut -f 1,2 | sed 's/^@/>/' | tr "\t" "\n" > $in/processed.fa & pid1=$! # create fasta file from processed fastq
 
 # "$bin"/module/mapping.sh $numb_of_files $numbproc $refgen $aux $out $experiment 
 # "$bin"/module/mapping_quality.sh $numb_of_files $out $experiment $outcontrol $quality $cutsite
