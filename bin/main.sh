@@ -8,14 +8,15 @@
 # clear
 # DEFINING VARIABLES
 experiment=$1			# e.i. rm31,32,34,35,50,51,53 corresponding to *$experiment*R{1,2}.fastq.gz
-patfile=$2			# is the pattern file
-fastqDir=$3			# full path to directory with fastq file
+refgenome=$2			# full path to ref genome
+patfile=$3			# is the pattern file
+fastqDir=$4			# full path to directory with fastq file
 numbproc=32
 
 ################################################################################
 
 # PREPARE DIRECTORY STRUCTURE
-datadir=$HOME/Work/dataset/bliss && mkdir -p $datadir/$experiment
+datadir=$HOME/Work/dataset/telo && mkdir -p $datadir/$experiment
 bin=$HOME/Dropbox/pipelines/BLISS/bin
 python=$HOME/Dropbox/pipelines/BLISS/python
 in=$datadir/$experiment/indata && mkdir -p $in
@@ -38,37 +39,29 @@ rm filelist_"$experiment"
 ################################################################################
 
 # "$bin"/module/prepare_files.sh  $r1 $in $numb_of_files $r2
-# "$bin"/module/pattern_filtering.sh $in $out $patfile
-# "$bin"/module/prepare_for_mapping.sh $numb_of_files $out $aux $in
+"$bin"/module/pattern_filtering.sh $in $out $patfile
+"$bin"/module/prepare_for_mapping.sh $numb_of_files $out $aux $in
 
-# USE UMI_TOOLS TO EXTRACT UMI FROM BARCODE
-# r1=$aux/r1.2b.aln.fq
-# umi_tools extract --stdin="$r1" --bc-pattern=NNNNNNNNXXXXXXXX --log=processed.log --stdout "$in"/processed.fastq.gz # Ns represent the random part of the barcode and Xs the fixed part (the barcode)
+r1=$aux/r1.2b.aln.fq
+umi_tools extract --stdin="$r1" --bc-pattern=NNNNNNNNXXXXXXXX --log=processed.log --stdout "$in"/processed.fastq.gz # Ns represent the random part of the barcode and Xs the fixed part (the barcode)
 
-# zcat "$in"/processed.fastq.gz | paste - - - -|awk '{print $1,substr($2,9,1000),$3,substr($4,9,1000)}'|tr ' ' '\n' > $in/processed.fq # remove the barcode
-# cat $in/processed.fq | paste - - - - | cut -f 1,2 | sed 's/^@/>/' | tr "\t" "\n" > $in/processed.fa # create fasta file from processed fastq
-# $bin/module/telomer.sh $in/processed.fa ../patterns/telomer $out $aux $in # prepare telomeric fastq files to be grouped by umi_tools
+zcat "$in"/processed.fastq.gz | paste - - - -|awk '{print $1,substr($2,9,1000),$3,substr($4,9,1000)}'|tr ' ' '\n' > $in/processed.fq # remove the barcode
+cat $in/processed.fq | paste - - - - | cut -f 1,2 | sed 's/^@/>/' | tr "\t" "\n" > $in/processed.fa # create fasta file from processed fastq
+$bin/module/telomer.sh $in/processed.fa ../patterns/telomer $out $aux $in # prepare telomeric fastq files to be grouped by umi_tools
 
-parallel "java -Xmx8G -jar ~/tools/picard-tools-2.1.0/picard.jar FastqToSam F1=$out/{} O=$out/{}.bam SM=for_tool_testing" ::: A.fq AA.fq TAA.fq CTAA.fq CCTAA.fq CCCTAA.fq
+for fastq in $(ls $out/*.fq); do
+    name=`echo $fastq | rev | cut -d'/' -f1 | rev | cut -d'.' -f1`
+    bwa mem -t $numbproc $refgenome $fastq > $out/"$name".sam
+    samtools view -H $out/$name.sam > $aux/header
+    samtools view $out/$name.sam | awk '{OFS="\t";$2="16";$3="1";$4="1000";$5="255";$6="63M";$10="*";$11="*";print $0}' > $aux/tailer
+    cat $aux/header $aux/tailer > $out/$name.sam
+    samtools view -bS $out/$name.sam > $out/$name.bam
+    samtools sort -o $out/$name.sorted.bam $out/$name.bam
+    samtools index $out/$name.sorted.bam $out/$name.sorted.bam.bai
+done
 
+parallel "umi_tools dedup -I $out/{} -S $out/{.}.dedup.bam -L $out/{.}.group.log --edit-distance-threshold 2" ::: A.sorted.bam AA.sorted.bam TAA.sorted.bam CTAA.sorted.bam CCTAA.sorted.bam CCCTAA.sorted.bam
 
-# "$bin"/module/mapping.sh $numb_of_files $numbproc $refgen $aux $out $experiment 
-# "$bin"/module/mapping_quality.sh $numb_of_files $out $experiment $outcontrol $quality $cutsite
-# "$bin"/module/umi_joining.sh $numb_of_files $out $experiment $aux $outcontrol $auxcontrol $quality $cutsite
-# cat "$datadir"/"$experiment"/outdata/_q"$quality".bed | cut -f-5 |LC_ALL=C uniq -c | awk '{print $2,$3,$4,$5,$6,$1}' | tr " " "," > "$datadir"/"$experiment"/auxdata/aux
-# #####UMI filtering
-# cp "$datadir"/"$experiment"/auxdata/aux "$datadir"/"$experiment"/outdata/pre_umi_filtering.csv
-
-# "$bin"/module/umi_filter_1.sh "$datadir"/"$experiment"/outdata/pre_umi_filtering.csv "$datadir"/"$experiment"/outdata/q"$quality"_aux
-
-# "$bin"/module/umi_filter_2.sh "$datadir"/"$experiment"/outdata/q"$quality"_aux "$datadir"/"$experiment"/outdata/q"$quality"_chr-loc-strand-umi-pcr
-
-# if [ $genome == "hg19" ]; then
-#     sed -i.bak 's/chr23/chrX/' "$datadir"/"$experiment"/outdata/q"$quality"_chr-loc-strand-umi-pcr
-#     sed -i.bak 's/chr24/chrY/' "$datadir"/"$experiment"/outdata/q"$quality"_chr-loc-strand-umi-pcr
-# fi
-
-# "$bin"/module/umi_filter_3.sh "$datadir"/"$experiment"/outdata/q"$quality"_chr-loc-strand-umi-pcr  "$datadir"/"$experiment"/outdata/q"$quality"_chr-loc-countDifferentUMI.bed
-# sed -i.bak 's/chr23/chrX/' "$datadir"/"$experiment"/outdata/q"$quality"_chr-loc-countDifferentUMI.bed
-# sed -i.bak 's/chr24/chrY/' "$datadir"/"$experiment"/outdata/q"$quality"_chr-loc-countDifferentUMI.bed
-
+parallel "echo {};cat {}|grep 'Input Reads' " ::: $(ls $out/*.sorted.group.log) | paste - - > $out/summary.txt
+echo >> $out/summary.txt
+parallel "echo {};cat {}|grep 'Number of reads out' " ::: $(ls $out/*.sorted.group.log) | paste - - >> $out/summary.txt
