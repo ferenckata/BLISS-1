@@ -37,9 +37,14 @@ rm filelist_"$experiment"
 
 ################################################################################
 
-"$bin"/module/prepare_files.sh  $r1 $in $numb_of_files $r2
-"$bin"/module/pattern_filtering.sh $in $out $patfile
-"$bin"/module/prepare_for_mapping.sh $numb_of_files $out $aux $in
+# "$bin"/module/prepare_files.sh  $r1 $in $numb_of_files $r2
+# "$bin"/module/pattern_filtering.sh $in $out $patfile
+# "$bin"/module/prepare_for_mapping.sh $numb_of_files $out $aux $in
+
+# USE UMI_TOOLS TO EXTRACT UMI FROM BARCODE
+r1=$aux/r1.2b.aln.fq
+umi_tools extract --stdin="$r1" --bc-pattern=NNNNNNNNXXXXXXXX --log=processed.log --stdout "$in"/processed.fastq.gz # Ns represent the random part of the barcode and Xs the fixed part (the barcode)
+zcat "$in"/processed.fastq.gz | paste - - - -|awk '{print $1,substr($2,9,1000),$3,substr($4,9,1000)}'|tr ' ' '\n' > $in/processed.fq # remove the barcode
 
 # "$bin"/module/mapping.sh $numb_of_files $numbproc $refgen $aux $out $experiment 
 # "$bin"/module/mapping_quality.sh $numb_of_files $out $experiment $outcontrol $quality $cutsite
