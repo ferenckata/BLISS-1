@@ -1,1 +1,1 @@
-^ 16...16 ( A | ( AA | (TAA | (CTAA | (CCTAA | CCCTAA))))) CCCTAA 0...1000 $
+^ ( A | ( AA | (TAA | (CTAA | (CCTAA | CCCTAA))))) CCCTAA 0...1000 $
